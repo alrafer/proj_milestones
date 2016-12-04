@@ -135,7 +135,7 @@ def create_jiras(tDarray, jirapw)
 end
 
 
-def update_jiras_info(tDarray)
+def update_jiras_info(tDarray, dskarray)
 	# Description
 	puts "(Function update_jiras_info)"
 
