@@ -114,7 +114,7 @@ def create_jiras(tDarray, jirapw)
 
 =begin
 			
-        	# Clean_variables
+        	# Clean_variables?
 
 			# Move the issues to the EPIC. This is tested and works
 			jira_url = "https://aramos:#{jirapw}@zendesk.atlassian.net/rest/agile/1.0/epic/OP-23028/issue"
@@ -126,14 +126,22 @@ def create_jiras(tDarray, jirapw)
             puts "\n"
             
             response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
+			if(response.code != 201)
+   				raise "Error with the http request to move the JIRAs!"
+			end
+	    	resp_data = JSON.parse(response.body)
 =end
 
 end
 
 
-def update_jiras(tDarray)
+def update_jiras_info(tDarray)
 	# Description
-
+	puts "(Function update_jiras_info)"
 
 end
 
+def add_milestones(tDarray, dskarray)
+	puts "(add_milestones)"
+
+end

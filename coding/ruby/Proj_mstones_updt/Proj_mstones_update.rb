@@ -174,23 +174,24 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 		puts "\n###Arrays are the same!\n"
 		# No need to create/update Jiras
 		# No need to modify info in Pstore (disk)
-	elsif (num_rows_html == num_rows_disk)  # Different arrays but same number of rows
-		# Edit milestones?
-		puts "\n###Edit milestones!\n"
-		# Update ALL JIRAs: Get Jira IDs from diskarray and update the modified params from twodarray on them.
-		update_jiras(twodarray, diskarray)
-		# Delete diskarray and save the new twodarray in Pstore
-		RM ymlfilename
-	    persist_rows(diskarray, ymlfilename)
-	else									# Different arrays and new rows
-		# Update all milestones
-		# Add new milestones
-		puts "Add AND/OR update milestones!"
-		# Add Jiras - all at once
-		
-		# Update all JIRAs: Get Jira IDs and update the modified params on them.
+	elsif (num_rows_html == num_rows_disk)        # Different arrays but same number of rows ==> same milestone descriptions
+		# Edit milestones and Jiras info.
+		puts "\n### Edit milestones info!\n"
+		# Review ALL JIRAs: Get Jira IDs from diskarray and update the modified info from twodarray on them.
+		update_jiras_info(twodarray, diskarray)
 
-		# Delete diskarray and save the new twodarray in Pstore
+		# Delete diskarray and save the new twodarray in Pstore (less effort)
+        ymlfilenameold = ymlfilename + "_old"
+        File.rename(ymlfilename,ymlfilenameold)
+	    persist_rows(twodarray, ymlfilename)
+	else									# Different arrays and new rows ==> new milestones have appeared + milestones info could have been modified.
+		puts "\n### Add AND/OR update milestones!\n"
+		# Edit milestones and Jiras info.
+		update_jiras_info(twodarray, diskarray)
+		# Add new milestones and Jiras.
+		add_milestones(twodarray, diskarray)
+		
+		# Delete diskarray and save the new twodarray in Pstore (less effort)
 		ymlfilenameold = ymlfilename + "_old"
 		File.rename(ymlfilename,ymlfilenameold)
 	    persist_rows(twodarray, ymlfilename)
