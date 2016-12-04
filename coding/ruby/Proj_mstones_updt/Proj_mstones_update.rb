@@ -79,13 +79,23 @@ doc.xpath("(//table[@class='wrapped confluenceTable'])[3]//tr").each do |row|
             key = i.to_s + "." + "2"
             twodarray[key] = celltoprint
 		when 2		# owner
-			tmp = celltoprint.to_s.split("\n") 
-			if tmp[1]
-				celltoprint = cleanowner(tmp[1])
-			else
-				puts "############################################### No owners matched!!"
-				celltoprint.replace "Unassigned"
+p celltoprint
+			tmp = celltoprint.to_s.split("\n")
+			celltoprint = nil
+p tmp[1]
+			tmp.each do |validname|
+				if validname.strip.empty?
+					puts "-- empty owner."
+				else
+					celltoprint = cleanowner(validname)
+					break
+				end
 			end
+			if celltoprint.nil?
+				puts "############################################### No owners matched!!"
+				celltoprint = "Unassigned"
+			end
+
 			key = i.to_s + "." + "3"
 			twodarray[key] = celltoprint
 		when 3		# eta, with the right format 
@@ -93,7 +103,7 @@ doc.xpath("(//table[@class='wrapped confluenceTable'])[3]//tr").each do |row|
 			if tmp[0]
 				celltoprint.replace tmp[-1][0].to_s       # Get the last element of an 2D array
 			else
-				puts "############################################### No date matched!!"
+				puts "############################################### No ETA matched (in the expected format)!!"
 				celltoprint.replace "1900-01-01"
 			end
 			key = i.to_s + "." + "4"
@@ -153,7 +163,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	test_hash = { "1.0" => "OP-1234", "1.1" => "1", "1.2" => "Implement xyz\n 2-Torpedo", "1.3" => "pmuresan", "1.4" => "2016-12-11", "1.5" => "NOT DONE",
 		"2.0" => "OP-1234", "2.1" => "2", "2.2" => "Clean tables 456\n 2- Test and more.\n 3- Third line all good ", "2.3" => "pmuresan", "2.4" => "2016-12-10", "2.5" => "IN PROGRESS",
 		"3.0" => "OP-1234", "3.1" => "3", "3.2" => "Build chef scafolding for chef", "3.3" => "dkertesz", "3.4" => "2016-12-07", "3.5" => "NOT DONE" }
-	new_hash = create_jiras(test_hash, jirapwd)
+	new_hash = create_jiras2(test_hash, jirapwd)
 
 	new_hash.each do |key, value|
         puts key + ' : ' + value
@@ -169,14 +179,12 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	stopped_in_row = compare_hashes.flatten.first
 	p stopped_in_row
 
-=begin
 	if twodarray == diskarray               # Same arrays
-		puts "\n###Arrays are the same!\n"
-		# No need to create/update Jiras
-		# No need to modify info in Pstore (disk)
+		puts "\n### Arrays are the same ==> Nothing to do.\n"
+		# No need to create/update Jiras or modify info in Pstore (disk)
 	elsif (num_rows_html == num_rows_disk)        # Different arrays but same number of rows ==> same milestone descriptions
 		# Edit milestones and Jiras info.
-		puts "\n### Edit milestones info!\n"
+		puts "\n### Different arrays but same number of rows ==> Edit milestones info.\n"
 		# Review ALL JIRAs: Get Jira IDs from diskarray and update the modified info from twodarray on them.
 		update_jiras_info(twodarray, diskarray)
 
@@ -196,13 +204,13 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 		File.rename(ymlfilename,ymlfilenameold)
 	    persist_rows(twodarray, ymlfilename)
 	end
-=end
 
 else 
 # Create Jiras and persist the data for the 1st time.
 	puts "\n\n### Creating Jiras for the 1st time.\n\n"
-	create_jiras(twodarray, jirapwd) # In the OP project, next available Jira issue number, type milestone, and other parameters.
+	create_jiras2(twodarray, jirapwd) # In the OP project, next available Jira issue number, type milestone, and other parameters.
 
 	persist_rows(twodarray, ymlfilename)
 end
 
+puts "\nEND."

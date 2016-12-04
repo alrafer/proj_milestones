@@ -6,6 +6,7 @@ require 'open-uri'
 
 
 def persist_rows(tDarray, filename)
+	puts "\n(Function persist_rows)\n"
 	mlst_tables_store = YAML::Store.new(filename)
 
 	mlst_tables_store.transaction do
@@ -24,8 +25,14 @@ def cleanowner (txt)
 end
 
 
-def create_jiras(tDarray, jirapw)
+def create_jiras2(tDarray, jirapw)
+    puts "\n(Function create_jiras2 (empty replacement for create_jiras))\n"
 
+end
+
+
+def create_jiras(tDarray, jirapw)
+	puts "\n(Function create_jiras)\n"
 	jira_url = "https://aramos:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 
 	# Declaring variables to modify them in the block:
@@ -137,11 +144,11 @@ end
 
 def update_jiras_info(tDarray, dskarray)
 	# Description
-	puts "(Function update_jiras_info)"
+	puts "\n(Function update_jiras_info)\n"
 
 end
 
 def add_milestones(tDarray, dskarray)
-	puts "(add_milestones)"
+	puts "\n(Function add_milestones)\n"
 
 end
