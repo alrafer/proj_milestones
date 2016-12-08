@@ -186,7 +186,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 		# Edit milestones and Jiras info.
 		puts "\n### Different arrays but same number of rows ==> Edit milestones info.\n"
 		# Review ALL JIRAs: Get Jira IDs from diskarray and update the modified info from twodarray on them.
-		update_jiras_info(twodarray, diskarray)
+		update_jiras_info(twodarray, diskarray, jirapwd)
 
 		# Delete diskarray and save the new twodarray in Pstore (less effort)
         ymlfilenameold = ymlfilename + "_old"
@@ -195,7 +195,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	else									# Different arrays and new rows ==> new milestones have appeared + milestones info could have been modified.
 		puts "\n### Add AND/OR update milestones!\n"
 		# Edit milestones and Jiras info.
-		update_jiras_info(twodarray, diskarray)
+		update_jiras_info(twodarray, diskarray, jirapwd)
 		# Add new milestones and Jiras.
 		add_milestones(twodarray, diskarray)
 		
