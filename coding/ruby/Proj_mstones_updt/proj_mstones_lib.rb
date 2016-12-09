@@ -149,7 +149,7 @@ def update_jiras_info(tDarray, dskarray, jirapw)
 
 	refresh_mlst = Array.new
 
-	dskarray.each do |key, value|
+	dskarray.each do |key, value|   # Generate the list of "dirty" milestones - that we need to refresh
 		mlst_row = key.split('.')
 		mlst = mlst_row[0].to_i
         if key.match(/[0-9]+\.0/) # once per milestone. Onwer, ETA, Status
@@ -165,13 +165,17 @@ puts "\n"
 p refresh_mlst
 
 	jira_url = "https://aramos:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
-	refresh_mlst.each do |value|
+	refresh_mlst.each_with_index do |value, index|
 		if value == "Y"
+			idx = index.to_a
+			owner = tDarray["#{idx1}.3"]
+			eta = tDarray["#{idx}.4"]
+			transition_id = getTransitionID(tDarray["#{idx}.5"])
+
 			# Build_json https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-edit-issues
             jirajson_hash = {:fields => {
 									:assignee => { :name => "#{owner}" },
 									:duedate => "#{eta}",
-									:description => "#{descr}",
 									:transition => { :id => "#{transition_id}"} } 
 							}
 				
@@ -194,7 +198,7 @@ p refresh_mlst
 		end
 	end
 	
-	# Update hash.
+	# Update hash:
 
 	return tDarray
 end	
