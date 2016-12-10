@@ -25,15 +25,15 @@ def cleanowner (txt)
 end
 
 
-def create_jiras2(tDarray, jirapw)
+def create_jiras2(tDarray, jirausr, jirapw)
     puts "\n(Function create_jiras2 (empty replacement for create_jiras))\n"
 
 end
 
 
-def create_jiras(tDarray, jirapw)
+def create_jiras(tDarray, jirausr, jirapw)
 	puts "\n(Function create_jiras)\n"
-	jira_url = "https://aramos:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
+	jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 
 	# Declaring variables to modify them in the block:
 	descr, descr_1stline, owner, eta, milestone = "default"
@@ -126,7 +126,7 @@ def create_jiras(tDarray, jirapw)
         	# Clean_variables?
 
 			# Move the issues to the EPIC. This is tested and works
-			jira_url = "https://aramos:#{jirapw}@zendesk.atlassian.net/rest/agile/1.0/epic/OP-23028/issue"
+			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/agile/1.0/epic/OP-23028/issue"
 			jirajson_hash = {:issues => [ "OP-23089" ]} 
 			# Send_json. Capture response
             json_msg = JSON.generate(jirajson_hash)
@@ -144,7 +144,7 @@ def create_jiras(tDarray, jirapw)
 end
 
 
-def update_jiras_info(tDarray, dskarray, jirapw)
+def update_jiras_info(tDarray, dskarray, jirausr, jirapw)
 	puts "\n(Function update_jiras_info)\n"
 
 	refresh_mlst = Array.new
@@ -164,7 +164,7 @@ def update_jiras_info(tDarray, dskarray, jirapw)
 puts "\n"
 p refresh_mlst
 
-	jira_url = "https://aramos:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
+	jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 	refresh_mlst.each_with_index do |value, index|
 		if value == "Y"
 			idx = index.to_i
