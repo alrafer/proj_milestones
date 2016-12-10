@@ -110,7 +110,7 @@ p tmp[1]
 			twodarray[key] = celltoprint
 		when 4 		# Status
 			key = i.to_s + "." + "5"
-			twodarray[key] = celltoprint
+			twodarray[key] = celltoprint.strip
 		end
         puts "#{key} : " + twodarray[key]
 		j += 1

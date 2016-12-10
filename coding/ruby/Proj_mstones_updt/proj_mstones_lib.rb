@@ -152,9 +152,9 @@ def update_jiras_info(tDarray, dskarray, jirapw)
 	dskarray.each do |key, value|   # Generate the list of "dirty" milestones - that we need to refresh
 		mlst_row = key.split('.')
 		mlst = mlst_row[0].to_i
-        if key.match(/[0-9]+\.0/) # once per milestone. Onwer, ETA, Status
+        if key.match(/[0-9]+\.0/)   # once per milestone. Onwer, ETA, Status
 			if ((tDarray["#{mlst}.3"] != dskarray["#{mlst}.3"]) || (tDarray["#{mlst}.4"] != dskarray["#{mlst}.4"]) || (tDarray["#{mlst}.5"] != dskarray["#{mlst}.5"]))
-				refresh_mlst[mlst] = "Y"  # refresh the whole milestone (all the fields)
+				refresh_mlst[mlst] = "Y"  # refresh the whole milestone (fields 3-5)
 			else
 	            refresh_mlst[mlst] = "N"  # don't do anything
 			end
@@ -167,10 +167,12 @@ p refresh_mlst
 	jira_url = "https://aramos:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 	refresh_mlst.each_with_index do |value, index|
 		if value == "Y"
-			idx = index.to_a
-			owner = tDarray["#{idx1}.3"]
+			idx = index.to_i
+			owner = tDarray["#{idx}.3"]
 			eta = tDarray["#{idx}.4"]
 			transition_id = getTransitionID(tDarray["#{idx}.5"])
+p tDarray["#{idx}.5"]
+p transition_id
 
 			# Build_json https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-edit-issues
             jirajson_hash = {:fields => {
@@ -222,7 +224,7 @@ def getTransitionID(status)
 		return "3"
 	when "CLOSED"
         return "6"
-	when "RESOLVED"
+	when "RESOLVED", "DONE"
         return "4"
 	end
 
