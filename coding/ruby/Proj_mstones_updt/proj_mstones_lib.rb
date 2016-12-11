@@ -8,15 +8,24 @@ require 'open-uri'
 def persist_rows(tDarray, filename)
 	puts "\n(Function persist_rows)\n"
 	mlst_tables_store = YAML::Store.new(filename)
+	jiras_flag = 0
 
 	mlst_tables_store.transaction do
 		tDarray.each do |key, value|
 			mlst_tables_store[key] = value
+			if key.match(/[0-9]+.6/)
+				jiras_flag = 1
+			end
     	end	
 	 	mlst_tables_store.commit
 	end
 
+	if jiras_flag == 0 
+		puts "(Warning: Function persist_rows: No Jiras are stored!)\n"
+	end
+
 end
+
 
 def cleanowner (txt)
 	texto = txt.scan(/\w+/)
@@ -102,6 +111,7 @@ def create_jiras(tDarray, jirausr, jirapw)
 			puts "\n"
 			if jirakey == ''
 				jira_keys << nil
+				puts "Error: No Jira key returned!!"
 			else
 				jira_keys << jirakey
 			end
@@ -161,10 +171,9 @@ def update_jiras_info(tDarray, dskarray, jirausr, jirapw)
 		end
 	end
 
-puts "\n"
-p refresh_mlst
+	puts "\n"
+	p refresh_mlst
 
-	jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 	refresh_mlst.each_with_index do |value, index|
 		if value == "Y"
 			idx = index.to_i
@@ -175,6 +184,7 @@ p tDarray["#{idx}.5"]
 p transition_id
 
 			# Build_json https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-edit-issues
+			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{idx}.6"
             jirajson_hash = {:fields => {
 									:assignee => { :name => "#{owner}" },
 									:duedate => "#{eta}",
@@ -200,13 +210,22 @@ p transition_id
 		end
 	end
 	
-	# Update hash:
+	# Add the Jirakeys from dskArray to twoDarray
+	dskarray.each do |key, value|
+		if key.match(/[0-9]+\.6/) 
+			mlst_row = key.split('.')
+        	mlst = mlst_row[0].to_i
+        	tDarray.merge!("#{mlst}.6" => value)
+			p key
+			p dskarray[key]
+		end
+    end
 
 	return tDarray
 end	
 
 
-def add_milestones(tDarray, dskarray)
+def add_jiras(tDarray, dskarray)
 	puts "\n(Function add_milestones)\n"
 
 end

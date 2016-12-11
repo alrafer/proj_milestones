@@ -187,7 +187,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 		# Edit milestones and Jiras info.
 		puts "\n### Different arrays but same number of rows ==> Edit milestones info.\n"
 		# Review ALL JIRAs: Get Jira IDs from diskarray and update the modified info from twodarray on them.
-		update_jiras_info(twodarray, diskarray, jirausr,jirapwd)
+		update_jiras_info(twodarray, diskarray, jirausr,jirapwd)   #twodarray now has the jiras (after this call) 
 
 		# Delete diskarray and save the new twodarray in Pstore (less effort)
         ymlfilenameold = ymlfilename + "_old"
@@ -196,9 +196,11 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	else									# Different arrays and new rows ==> new milestones have appeared + milestones info could have been modified.
 		puts "\n### Add AND/OR update milestones!\n"
 		# Edit milestones and Jiras info.
-		update_jiras_info(twodarray, diskarray, jirausr, jirapwd)
+#	split twodarray
+		update_jiras_info(twodarray1, diskarray, jirausr, jirapwd)    #twodarray1 now has the jiras (after this call)
 		# Add new milestones and Jiras.
-		add_milestones(twodarray, diskarray)
+		create_jiras2(twodarray2, jirausr, jirapwd)   # twodarray2 now has the jiras (after this call)
+#	merge twodarray
 		
 		# Delete diskarray and save the new twodarray in Pstore (less effort)
 		ymlfilenameold = ymlfilename + "_old"
@@ -209,7 +211,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 else 
 # Create Jiras and persist the data for the 1st time.
 	puts "\n\n### Creating Jiras for the 1st time.\n\n"
-	create_jiras2(twodarray, jirausr, jirapwd) # In the OP project, next available Jira issue number, type milestone, and other parameters.
+	create_jiras2(twodarray, jirausr, jirapwd)   # In the OP project, next available Jira issue number, type milestone, and other parameters.
 
 	persist_rows(twodarray, ymlfilename)
 end
