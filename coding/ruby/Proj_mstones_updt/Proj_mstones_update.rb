@@ -23,8 +23,8 @@ end
 jirapwd = ENV['jpass']
 jirausr = ENV['juser']
 
-if (jirapwd == nil)
-	puts "Pwd missing to use the Atlassian API!"
+if (jirapwd == nil) || (jirausr == nil)
+	puts "Usr/pwd to use the Atlassian API is missing!"
 	exit
 end
 
@@ -71,14 +71,20 @@ doc.xpath("(//table[@class='wrapped confluenceTable'])[3]//tr").each do |row|
 		celltoprint = Sanitize.clean(cell)
 		case j 
 		when 0 		# epic, milestone_num, descr
-			key = i.to_s + "." + "0"
-			twodarray[key] = epic
-			puts "#{key} : " + twodarray[key].to_s
-			key = i.to_s + "." + "1"
-			twodarray[key] = i
-            puts "#{key} : " + twodarray[key].to_s
-            key = i.to_s + "." + "2"
-            twodarray[key] = celltoprint
+			if celltoprint.match(/\^ .+/)
+				puts "Skipping this Milestone row."
+				puts celltoprint
+				break
+			else
+           		key = i.to_s + "." + "0"
+            	twodarray[key] = epic
+            	puts "#{key} : " + twodarray[key].to_s
+            	key = i.to_s + "." + "1"
+            	twodarray[key] = i
+            	puts "#{key} : " + twodarray[key].to_s
+            	key = i.to_s + "." + "2"
+				twodarray[key] = celltoprint
+			end
 		when 2		# owner
 p celltoprint
 			tmp = celltoprint.to_s.split("\n")
@@ -211,7 +217,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 else 
 # Create Jiras and persist the data for the 1st time.
 	puts "\n\n### Creating Jiras for the 1st time.\n\n"
-	create_jiras2(twodarray, jirausr, jirapwd)   # In the OP project, next available Jira issue number, type milestone, and other parameters.
+	create_jiras(twodarray, jirausr, jirapwd)   # In the OP project, next available Jira issue number, type milestone, and other parameters.
 
 	persist_rows(twodarray, ymlfilename)
 end

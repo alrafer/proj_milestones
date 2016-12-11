@@ -80,7 +80,7 @@ def create_jiras(tDarray, jirausr, jirapw)
         	
 			# Build_json
 			jirajson_hash = {:fields => { :project => { :key => "OP" }, :summary => "#{descr_title}", :issuetype => { :name => "Milestone" },
-							:assignee => { :name => "#{owner}" }, :reporter => { :name => "amoynihan" }, :duedate => "#{eta}", :transition => {:id => "#{transition_id}"},
+							:assignee => { :name => "#{owner}" }, :reporter => { :name => "aramos" }, :duedate => "#{eta}",
 							:priority => { :name => "Normal" }, :labels => [ "test_alb", "backlog_grooming" ], :environment => "Test", :description => "#{descr}" }
 			}
 
@@ -90,19 +90,19 @@ def create_jiras(tDarray, jirausr, jirapw)
 			puts json_msg
 			puts "\n"
 
-=begin
 			response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
 			if(response.code != 201)
    				raise "Error with the http request to create the JIRAs!"
 			end
 	    	resp_data = JSON.parse(response.body)
-=end
 
 # Fake response, so we don't have to create the JIRAs:
+=begin
 			resp_data = '{"id"=>"162738", "key"=>"OP-23948", "self"=>"https://zendesk.atlassian.net/rest/api/2/issue/162738"}'
 
     		puts "Response:"
     		puts resp_data.to_s
+=end
 
 			# Capture the Jira key generated and store it in the array
 			jirakey = resp_data.to_s.match(/OP-[^"]+/) 
@@ -128,6 +128,38 @@ def create_jiras(tDarray, jirausr, jirapw)
        	tDarray.merge!("#{index}" => "#{j}")
 		count += 1
 	end
+
+	# Update statuses - transitions! :transition => {:id => "#{transition_id}"}. See here: https://answers.atlassian.com/questions/107630/jira-how-to-change-issue-status-via-rest
+	# if in status 2 ==> x.
+	# if in status 3 ==> x,
+	# And more
+	tDarray.each do |key, value|
+        if key.match(/[0-9]+\.6/)
+			mlst_row = key.split('.')
+            mlst = mlst_row[0].to_i
+			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{idx}.6/transitions"
+			jirajson_hash = { :transition => { :id => "#{transition_id}"} }
+            
+            # Send_json. Capture response
+            json_msg = JSON.generate(jirajson_hash)
+            puts "\nSending JSON message...\n\n"
+            puts json_msg
+            puts "\n"
+=begin
+            response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
+            if(response.code != 204)
+                raise "Error with the http request to update the JIRA field (with the transition ID)!"
+            end
+            resp_data = JSON.parse(response.body)
+=end
+# Fake response, so we don't have to create the JIRAs:
+            resp_data = '{"id"=>"162738", "key"=>"OP-23948", "self"=>"https://zendesk.atlassian.net/rest/api/2/issue/162738"}'
+            puts "Response:"
+            puts resp_data.to_s
+        end
+    end
+
+
 	
 	return tDarray
 
@@ -186,11 +218,11 @@ p transition_id
 			# Build_json https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-edit-issues
 			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{idx}.6"
             jirajson_hash = {:fields => {
-									:assignee => { :name => "#{owner}" },
-									:duedate => "#{eta}",
-									:transition => { :id => "#{transition_id}"} } 
-							}
-				
+                                    :assignee => { :name => "#{owner}" },
+                                    :duedate => "#{eta}",
+                                    :transition => { :id => "#{transition_id}"} }
+                            }
+
             # Send_json. Capture response
             json_msg = JSON.generate(jirajson_hash)
             puts "\nSending JSON message...\n\n"
@@ -199,7 +231,7 @@ p transition_id
 =begin
             response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
             if(response.code != 204)
-               	raise "Error with the http request to update the JIRA field!"
+                raise "Error with the http request to update the JIRA field!"
             end
             resp_data = JSON.parse(response.body)
 =end
@@ -238,13 +270,13 @@ def getTransitionID(status)
 
 	case status
 	when "TO DO LATER"
-		return "1"
-	when "IN PROGRESS"
 		return "3"
+	when "IN PROGRESS"
+		return "821"
 	when "CLOSED"
-        return "6"
+        return "701"
 	when "RESOLVED", "DONE"
-        return "4"
+        return "811"
 	end
 
 end
