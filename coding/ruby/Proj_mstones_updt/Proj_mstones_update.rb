@@ -74,6 +74,7 @@ doc.xpath("(//table[@class='wrapped confluenceTable'])[3]//tr").each do |row|
 			if celltoprint.match(/\^ .+/)
 				puts "Skipping this Milestone row."
 				puts celltoprint
+				i -= 1
 				break
 			else
            		key = i.to_s + "." + "0"
@@ -100,7 +101,7 @@ p tmp[1]
 			end
 			if celltoprint.nil?
 				puts "############################################### No owners matched!!"
-				celltoprint = "Unassigned"
+				celltoprint = "unassigned"
 			end
 
 			key = i.to_s + "." + "3"

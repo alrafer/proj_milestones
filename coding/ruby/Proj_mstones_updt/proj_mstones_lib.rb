@@ -45,7 +45,7 @@ def create_jiras(tDarray, jirausr, jirapw)
 	jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 
 	# Declaring variables to modify them in the block:
-	descr, descr_1stline, owner, eta, milestone = "default"
+	descr, descr_1stline, owner, eta, milestone, transition_id = "default"
 	
 	# Declare Array to store JIRAs:
 	jira_keys = Array.new
@@ -61,29 +61,32 @@ def create_jiras(tDarray, jirausr, jirapw)
    	 	when key.match(/[0-9]+.4/)
    	    	eta = value
 			puts "4.eta = #{eta}"
-	 	when key.match(/[0-9]+.5/)
-			milestone = key.match(/([0-9]+).5/)
-   	 		status = value
-			transition_id = getTransitionID(status)
-			puts "1.milestone = #{milestone[1]}"
-			puts "5.status = #{status}"
-			puts "5.Transition_ID = #{transition_id}"
 
-			# Let's generate the Jira Title:
+			# Let's generate the Jira issue summary
 			descr_1stline = descr.split("\n")
-			if descr_1stline[0] == ' '
-				descr_title = descr_1stline[1]	
+puts "Descr:"
+p descr_1stline
+			case descr_1stline[0]
+			when  " ", ""
+				descr_title = descr_1stline[1].strip
 			else
-				descr_title = descr_1stline[0]	
+				descr_title = descr_1stline[0].strip
 			end
 			puts "descr_title = #{descr_title}"
         	
 			# Build_json
-			jirajson_hash = {:fields => { :project => { :key => "OP" }, :summary => "#{descr_title}", :issuetype => { :name => "Milestone" },
+			case owner
+			when "unassigned"
+                jirajson_hash = {:fields => { :project => { :key => "OP" }, :summary => "#{descr_title}", :issuetype => { :name => "Milestone" },
+                            :reporter => { :name => "aramos" }, :duedate => "#{eta}",
+                            :priority => { :name => "Normal" }, :labels => [ "test_alb", "backlog_grooming" ], :environment => "Test", :description => "#{descr}" }
+                }
+			else
+				jirajson_hash = {:fields => { :project => { :key => "OP" }, :summary => "#{descr_title}", :issuetype => { :name => "Milestone" },
 							:assignee => { :name => "#{owner}" }, :reporter => { :name => "aramos" }, :duedate => "#{eta}",
 							:priority => { :name => "Normal" }, :labels => [ "test_alb", "backlog_grooming" ], :environment => "Test", :description => "#{descr}" }
-			}
-
+				}
+			end
         	# Send_json. Capture response
 			json_msg = JSON.generate(jirajson_hash)
 			puts "Sending JSON message...\n\n"
@@ -124,6 +127,7 @@ def create_jiras(tDarray, jirausr, jirapw)
 	jira_keys.each do |j|
 		index = count.to_s + ".6"
 		puts index
+p jira_keys[count-1]
        	puts "\n"
        	tDarray.merge!("#{index}" => "#{j}")
 		count += 1
@@ -133,33 +137,46 @@ def create_jiras(tDarray, jirausr, jirapw)
 	# if in status 2 ==> x.
 	# if in status 3 ==> x,
 	# And more
-	tDarray.each do |key, value|
-        if key.match(/[0-9]+\.6/)
-			mlst_row = key.split('.')
-            mlst = mlst_row[0].to_i
-			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{idx}.6/transitions"
-			jirajson_hash = { :transition => { :id => "#{transition_id}"} }
+	jira_keys.each_with_index do |value,j|   # Looping through the milestones to update the status regardless of the order of the tDarray hash
+		idx = (j+1).to_s + "." + "5"
+puts "Updating status for index #{idx}."
+		status = tDarray[idx]
+        transition_id = getTransitionID(status)
+        puts "5.status = #{status}"
+        puts "5.Transition_ID = #{transition_id}"			
+	
+        idx = (j+1).to_s + "." + "6"
+		jirakey = tDarray[idx]
+		jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{jirakey}/transitions"
+			
+		jirajson_hash = { 
+						 :update => {
+        					 :comment => [
+            					{ :add => { :body => "Testing" } }
+        					 ] 
+						  },
+						  :transition => { :id => "#{transition_id}" } 
+						}
             
-            # Send_json. Capture response
-            json_msg = JSON.generate(jirajson_hash)
-            puts "\nSending JSON message...\n\n"
-            puts json_msg
-            puts "\n"
-=begin
-            response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
-            if(response.code != 204)
-                raise "Error with the http request to update the JIRA field (with the transition ID)!"
-            end
-            resp_data = JSON.parse(response.body)
-=end
-# Fake response, so we don't have to create the JIRAs:
-            resp_data = '{"id"=>"162738", "key"=>"OP-23948", "self"=>"https://zendesk.atlassian.net/rest/api/2/issue/162738"}'
-            puts "Response:"
-            puts resp_data.to_s
+        # Send_json. Capture response
+        json_msg = JSON.generate(jirajson_hash)
+        puts "\nSending JSON message...\n"
+        puts json_msg
+        puts "\n"
+
+        response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
+        if response.code != 204
+            raise "Error with the http request to update the JIRA field (with the transition ID)!"
         end
+        # resp_data = JSON.parse(response.body)
+
+# Fake response, so we don't have to create the JIRAs:
+=begin
+        resp_data = '{"id"=>"162738", "key"=>"OP-23948", "self"=>"https://zendesk.atlassian.net/rest/api/2/issue/162738"}'
+        puts "Response:"
+        puts resp_data.to_s
+=end
     end
-
-
 	
 	return tDarray
 
@@ -208,15 +225,15 @@ def update_jiras_info(tDarray, dskarray, jirausr, jirapw)
 
 	refresh_mlst.each_with_index do |value, index|
 		if value == "Y"
-			idx = index.to_i
-			owner = tDarray["#{idx}.3"]
-			eta = tDarray["#{idx}.4"]
-			transition_id = getTransitionID(tDarray["#{idx}.5"])
-p tDarray["#{idx}.5"]
+			mlst = index.to_i
+			owner = tDarray["#{mlst}.3"]
+			eta = tDarray["#{mlst}.4"]
+			transition_id = getTransitionID(tDarray["#{mlst}.5"])
+p tDarray["#{mlst}.5"]
 p transition_id
 
 			# Build_json https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-edit-issues
-			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{idx}.6"
+			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{mlst}.6"
             jirajson_hash = {:fields => {
                                     :assignee => { :name => "#{owner}" },
                                     :duedate => "#{eta}",
@@ -258,7 +275,7 @@ end
 
 
 def add_jiras(tDarray, dskarray)
-	puts "\n(Function add_milestones)\n"
+	puts "\n(Function add_jiras)\n"
 
 end
 
@@ -266,7 +283,7 @@ end
 def getTransitionID(status)
 	# statuses: "TO DO LATER", "IN PROGRESS", "CLOSED", "RESOLVED"
 
-	puts "\n(Function add_milestones)\n"
+	puts "\n(Function getTransitionID)\n"
 
 	case status
 	when "TO DO LATER"
@@ -276,7 +293,7 @@ def getTransitionID(status)
 	when "CLOSED"
         return "701"
 	when "RESOLVED", "DONE"
-        return "811"
+        return "821"
 	end
 
 end
