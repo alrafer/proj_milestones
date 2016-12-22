@@ -168,7 +168,6 @@ puts "Updating status for index #{idx}."
         if response.code != 204
             raise "Error with the http request to update the JIRA field (with the transition ID)!"
         end
-        # resp_data = JSON.parse(response.body)
 
 # Fake response, so we don't have to create the JIRAs:
 =begin
@@ -272,6 +271,11 @@ p transition_id
 
 	return tDarray
 end	
+
+def update_jiras_info2(tDarray, dskarray, jirausr, jirapw)
+    puts "\n(Function update_jiras_info2)\n"
+
+end
 
 
 def add_jiras(tDarray, dskarray)
