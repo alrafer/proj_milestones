@@ -34,13 +34,13 @@ def cleanowner (txt)
 end
 
 
-def create_jiras2(tDarray, jirausr, jirapw)
+def create_jiras2(tDarray, jirausr, jirapw, epic)
     puts "\n(Function create_jiras2 (empty replacement for create_jiras))\n"
 
 end
 
 
-def create_jiras(tDarray, jirausr, jirapw)
+def create_jiras(tDarray, jirausr, jirapw, epic_id)
 	puts "\n(Function create_jiras)\n"
 	jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 
@@ -111,7 +111,6 @@ p descr_1stline
 			jirakey = resp_data.to_s.match(/OP-[^"]+/) 
 			puts "\n"
 			puts "Jirakey captured: " + jirakey.to_s
-			puts "\n"
 			if jirakey == ''
 				jira_keys << nil
 				puts "Error: No Jira key returned!!"
@@ -122,14 +121,29 @@ p descr_1stline
 		end
 	end
 
-	# Add the Jirakeys to twoDarray
+	# Add the Jirakeys to twoDarray and move the issues to the EPIC (this is tested and works) https://docs.atlassian.com/jira-software/REST/cloud/#agile/1.0/epic-moveIssuesToEpic
+    puts "\n### Moving the tickets to the epic.\n"
 	count = 1
-	jira_keys.each do |j|
+	jira_keys.each do |jiraid|
 		index = count.to_s + ".6"
 		puts index
 p jira_keys[count-1]
        	puts "\n"
-       	tDarray.merge!("#{index}" => "#{j}")
+		jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/agile/1.0/epic/#{epic_id}/issue"
+		jirajson_hash = {:issues => [ "#{jiraid}" ]}
+		# Send_json. Capture response
+    	json_msg = JSON.generate(jirajson_hash)
+    	puts "Sending API post to move Jira's under an EPIC.\n\n"
+    	puts json_msg
+    	puts "\n"
+           
+    	response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
+		if(response.code != 204)
+   			raise "Error with the http request to move the JIRAs!"
+			p response.code
+		end
+		# Adding jira_keys to the hash
+       	tDarray.merge!("#{index}" => "#{jiraid}")
 		count += 1
 	end
 
@@ -176,28 +190,9 @@ puts "Updating status for index #{idx}."
         puts resp_data.to_s
 =end
     end
+
 	
 	return tDarray
-
-=begin
-			
-        	# Clean_variables?
-
-			# Move the issues to the EPIC. This is tested and works
-			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/agile/1.0/epic/OP-23028/issue"
-			jirajson_hash = {:issues => [ "OP-23089" ]} 
-			# Send_json. Capture response
-            json_msg = JSON.generate(jirajson_hash)
-            puts "Sending message...\n\n"
-            puts json_msg
-            puts "\n"
-            
-            response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
-			if(response.code != 201)
-   				raise "Error with the http request to move the JIRAs!"
-			end
-	    	resp_data = JSON.parse(response.body)
-=end
 
 end
 

@@ -171,7 +171,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	test_hash = { "1.0" => "OP-1234", "1.1" => "1", "1.2" => "Implement xyz\n 2-Torpedo", "1.3" => "pmuresan", "1.4" => "2016-12-11", "1.5" => "NOT DONE",
 		"2.0" => "OP-1234", "2.1" => "2", "2.2" => "Clean tables 456\n 2- Test and more.\n 3- Third line all good ", "2.3" => "pmuresan", "2.4" => "2016-12-10", "2.5" => "IN PROGRESS",
 		"3.0" => "OP-1234", "3.1" => "3", "3.2" => "Build chef scafolding for chef", "3.3" => "dkertesz", "3.4" => "2016-12-07", "3.5" => "NOT DONE" }
-	new_hash = create_jiras2(test_hash, jirausr, jirapwd)
+	new_hash = create_jiras2(test_hash, jirausr, jirapwd, epic)
 
 	new_hash.each do |key, value|
         puts key + ' : ' + value
@@ -206,7 +206,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 #	split twodarray
 		update_jiras_info2(twodarray1, diskarray, jirausr, jirapwd)    #twodarray1 now has the jiras (after this call)
 		# Add new milestones and Jiras.
-		create_jiras2(twodarray2, jirausr, jirapwd)   # twodarray2 now has the jiras (after this call)
+		create_jiras2(twodarray2, jirausr, jirapwd, epic)   # twodarray2 now has the jiras (after this call)
 #	merge twodarray
 		
 		# Delete diskarray and save the new twodarray in Pstore (less effort)
@@ -218,7 +218,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 else 
 # Create Jiras and persist the data for the 1st time.
 	puts "\n\n### Creating Jiras for the 1st time.\n\n"
-	create_jiras(twodarray, jirausr, jirapwd)   # In the OP project, next available Jira issue number, type milestone, and other parameters.
+	create_jiras(twodarray, jirausr, jirapwd, epic)   # In the OP project, next available Jira issue number, type milestone, and other parameters.
 
 	persist_rows(twodarray, ymlfilename)
 end
