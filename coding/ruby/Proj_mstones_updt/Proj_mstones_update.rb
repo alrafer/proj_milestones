@@ -160,23 +160,10 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 		count += 1
 	end
 
-	puts "\n\n\n"
-	diskarray.each do |key, value|
-    	puts key + ' : ' + value.to_s
-	end
-
-	# Testing functions
-=begin	
-	puts "\n\n\n\n\n\n\n"
-	test_hash = { "1.0" => "OP-1234", "1.1" => "1", "1.2" => "Implement xyz\n 2-Torpedo", "1.3" => "pmuresan", "1.4" => "2016-12-11", "1.5" => "NOT DONE",
-		"2.0" => "OP-1234", "2.1" => "2", "2.2" => "Clean tables 456\n 2- Test and more.\n 3- Third line all good ", "2.3" => "pmuresan", "2.4" => "2016-12-10", "2.5" => "IN PROGRESS",
-		"3.0" => "OP-1234", "3.1" => "3", "3.2" => "Build chef scafolding for chef", "3.3" => "dkertesz", "3.4" => "2016-12-07", "3.5" => "NOT DONE" }
-	new_hash = create_jiras2(test_hash, jirausr, jirapwd, epic)
-
-	new_hash.each do |key, value|
-        puts key + ' : ' + value
-    end
-=end	
+	# puts "\n\n\n"
+	# diskarray.each do |key, value|
+    #  	puts key + ' : ' + value.to_s
+	# end
 
 
 # Now let's compare hashes to take decisions: Create new Jira_mlstn? update Jira_mlstn? update Pstore in disk?
@@ -187,10 +174,10 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	stopped_in_row = compare_hashes.flatten.first
 	p stopped_in_row
 
-	if twodarray == diskarray               # Same arrays
+	if twodarray == diskarray                 # Same arrays
 		puts "\n### Arrays are the same ==> Nothing to do.\n"
 		# No need to create/update Jiras or modify info in Pstore (disk)
-	elsif (num_rows_html == num_rows_disk)        # Different arrays but same number of rows ==> same milestone descriptions
+	elsif (num_rows_html == num_rows_disk)    # Different arrays but same number of rows ==> same milestone descriptions
 		# Edit milestones and Jiras info.
 		puts "\n### Different arrays but same number of rows ==> Edit milestones info.\n"
 		# Review ALL JIRAs: Get Jira IDs from diskarray and update the modified info from twodarray on them.
@@ -200,8 +187,8 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
         ymlfilenameold = ymlfilename + "_old"
         File.rename(ymlfilename,ymlfilenameold)
 	    persist_rows(twodarray, ymlfilename)
-	else									# Different arrays and new rows ==> new milestones have appeared + milestones info could have been modified.
-		puts "\n### Add AND/OR update milestones!\n"
+	else									  # Different arrays and new rows ==> new milestones have appeared + milestones info could have been modified.
+		puts "\n### Different arrays and new rows: Add AND/OR update milestones!\n"
 		# Edit milestones and Jiras info.
 #	split twodarray
 		update_jiras_info2(twodarray1, diskarray, jirausr, jirapwd)    #twodarray1 now has the jiras (after this call)
