@@ -71,7 +71,7 @@ doc.xpath("(//table[@class='wrapped confluenceTable'])[3]//tr").each do |row|
 		celltoprint = Sanitize.clean(cell)
 		case j 
 		when 0 		# epic, milestone_num, descr
-			if celltoprint.match(/\^ .+/)
+			if celltoprint.match(/\^ .+/) 
 				puts "Skipping this Milestone row."
 				puts celltoprint
 				i -= 1
