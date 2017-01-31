@@ -227,13 +227,13 @@ def update_jiras_info(tDarray, dskarray, jirausr, jirapw)
 			transition_id = getTransitionID(tDarray["#{mlst}.5"])
 p tDarray["#{mlst}.5"]
 p transition_id
-
 			# Build_json https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-edit-issues
-			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{mlst}.6"
+			jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/#{dskarray["#{mlst}.6"]}"
+p jira_url
             jirajson_hash = {:fields => {
                                     :assignee => { :name => "#{owner}" },
-                                    :duedate => "#{eta}",
-                                    :transition => { :id => "#{transition_id}"} }
+                                    :duedate => "#{eta}"
+                                    }
                             }
 
             # Send_json. Capture response
@@ -241,21 +241,22 @@ p transition_id
             puts "\nSending JSON message...\n\n"
             puts json_msg
             puts "\n"
-=begin
-            response = RestClient.post jira_url, json_msg, {"Content-Type" => "application/json"}
-            if(response.code != 204)
+
+           	response = RestClient.put jira_url, json_msg, {"Content-Type" => "application/json"}
+            if (response.code != 204)
                 raise "Error with the http request to update the JIRA field!"
             end
-            resp_data = JSON.parse(response.body)
-=end
+
+=begin
 # Fake response, so we don't have to create the JIRAs:
             resp_data = '{"id"=>"162738", "key"=>"OP-23948", "self"=>"https://zendesk.atlassian.net/rest/api/2/issue/162738"}'
             puts "Response:"
-            puts resp_data.to_s
+=end
+
 		end
 	end
 	
-	# Add the Jirakeys from dskArray to twoDarray
+	# Add the Jirakeys from dskArray to twoDarray, so we can persist it with the Jiras.
 	dskarray.each do |key, value|
 		if key.match(/[0-9]+\.6/) 
 			mlst_row = key.split('.')
@@ -268,6 +269,7 @@ p transition_id
 
 	return tDarray
 end	
+
 
 def update_jiras_info2(tDarray, dskarray, jirausr, jirapw)
     puts "\n(Function update_jiras_info2)\n"

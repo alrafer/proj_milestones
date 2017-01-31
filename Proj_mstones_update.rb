@@ -59,7 +59,10 @@ mlst_tables_store = YAML::Store.new(ymlfilename)
 # Docum for 2D arrays: http://www.dotnetperls.com/2d-ruby
 twodarray = Hash.new() # Hash read from the HTLM table
 diskarray = Hash.new() # Hash read from disk
+twodarray1,twodarray2 = Hash.new() # to use in the "new rows" usecase.
+
 compare_hashes = Array.new
+
 i = 0 # row
 j = 0 # column
 key = '0.0'
@@ -177,25 +180,30 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	if twodarray == diskarray                 # Same arrays
 		puts "\n### Arrays are the same ==> Nothing to do.\n"
 		# No need to create/update Jiras or modify info in Pstore (disk)
+
 	elsif (num_rows_html == num_rows_disk)    # Different arrays but same number of rows ==> same milestone descriptions
 		# Edit milestones and Jiras info.
 		puts "\n### Different arrays but same number of rows ==> Edit milestones info.\n"
 		# Review ALL JIRAs: Get Jira IDs from diskarray and update the modified info from twodarray on them.
-		update_jiras_info2(twodarray, diskarray, jirausr,jirapwd)   #twodarray now has the jiras (after this call) 
+		update_jiras_info(twodarray, diskarray, jirausr,jirapwd)   #twodarray now has the jiras (after this call) 
 
 		# Delete diskarray and save the new twodarray in Pstore (less effort)
         ymlfilenameold = ymlfilename + "_old"
         File.rename(ymlfilename,ymlfilenameold)
 	    persist_rows(twodarray, ymlfilename)
+
 	else									  # Different arrays and new rows ==> new milestones have appeared + milestones info could have been modified.
 		puts "\n### Different arrays and new rows: Add AND/OR update milestones!\n"
 		# Edit milestones and Jiras info.
 #	split twodarray
+		twodarray1 = split_tda(twodarray, num_rows_disk, 1) 
+		twodarray2 = split_tda(twodarray, num_rows_disk, 2)
 		update_jiras_info2(twodarray1, diskarray, jirausr, jirapwd)    #twodarray1 now has the jiras (after this call)
 		# Add new milestones and Jiras.
 		create_jiras2(twodarray2, jirausr, jirapwd, epic)   # twodarray2 now has the jiras (after this call)
+
 #	merge twodarray
-		
+		twodarray = mergetda(twodarray1,twodarray2)	
 		# Delete diskarray and save the new twodarray in Pstore (less effort)
 		ymlfilenameold = ymlfilename + "_old"
 		File.rename(ymlfilename,ymlfilenameold)
@@ -211,6 +219,4 @@ else
 end
 
 puts "\nEND."
-
-
 
