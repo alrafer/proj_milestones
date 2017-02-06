@@ -301,5 +301,47 @@ def getTransitionID(status)
 
 end
 
+def split_tda(tDarray, num_rows, part)
+	# Splits twodarrays in two pieces.
+    puts "\n(Function split_tda)\n"
+
+	tDarray_part = Hash.new()
+
+	if part == 1
+		tDarray.each do |key, value|
+			mlst_row = key.split('.')
+        	mlst = mlst_row[0].to_i
+			if mlst <= num_rows
+				tDarray_part[key] = value
+			end
+		end
+	elsif part == 2
+		tDarray.each do |key, value|
+            mlst_row = key.split('.')
+            mlst = mlst_row[0].to_i
+            if mlst > num_rows
+                tDarray_part[key] = value
+            end
+        end
+	else
+		puts "Error in param when calling split_tda function."
+	end
+	return tDarray_part
+end
+
+
+def merge_tda(tDarray1,tDarray2)
+	# Merges twodarrays back into one single twodarray
+    puts "\n(Function merge_tda)\n"
+
+	tDarray_full = Hash.new()
+	
+	tDarray_full = tDarray1
+	tDarray2.each do |key, value|
+		tDarray_full[key] = value
+	end
+	
+	return tDarray_full
+end
 
 

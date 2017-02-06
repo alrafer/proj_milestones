@@ -203,7 +203,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 		create_jiras2(twodarray2, jirausr, jirapwd, epic)   # twodarray2 now has the jiras (after this call)
 
 #	merge twodarray
-		twodarray = mergetda(twodarray1,twodarray2)	
+		twodarray = merge_tda(twodarray1,twodarray2)	
 		# Delete diskarray and save the new twodarray in Pstore (less effort)
 		ymlfilenameold = ymlfilename + "_old"
 		File.rename(ymlfilename,ymlfilenameold)
