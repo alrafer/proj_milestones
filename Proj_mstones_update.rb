@@ -1,5 +1,5 @@
 # Example to start:
-# To test: curl -u jirausr:pwd https://zendesk.atlassian.net/wiki/rest/api/content/161580589?expand=body.storage | python -mjson.tool
+# To test: curl -u $juser:$pass https://zendesk.atlassian.net/wiki/rest/api/content/161580589?expand=body.storage | python -mjson.tool
 # "PodZilla - After-Party" page ID: 161580589
 # EPIC = POD-681
 # Command: ruby Proj_mstones_update.rb 161580589 POD-681
