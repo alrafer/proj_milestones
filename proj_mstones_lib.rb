@@ -40,7 +40,7 @@ def create_jiras2(tDarray, jirausr, jirapw, epic)
 end
 
 
-def create_jiras(tDarray, jirausr, jirapw, epic_id)
+def create_jiras(tDarray, jirausr, jirapw, epic_id, start_in_row, reporter)
 	puts "\n(Function create_jiras)\n"
 	jira_url = "https://#{jirausr}:#{jirapw}@zendesk.atlassian.net/rest/api/2/issue/"
 
@@ -78,12 +78,12 @@ p descr_1stline
 			case owner
 			when "unassigned"
                 jirajson_hash = {:fields => { :project => { :key => "OP" }, :summary => "#{descr_title}", :issuetype => { :name => "Milestone" },
-                            :reporter => { :name => "aramos" }, :duedate => "#{eta}",
+                            :reporter => { :name => "#{reporter}" }, :duedate => "#{eta}",
                             :priority => { :name => "Normal" }, :labels => [ "test_alb", "backlog_grooming" ], :environment => "Test", :description => "#{descr}" }
                 }
 			else
 				jirajson_hash = {:fields => { :project => { :key => "OP" }, :summary => "#{descr_title}", :issuetype => { :name => "Milestone" },
-							:assignee => { :name => "#{owner}" }, :reporter => { :name => "aramos" }, :duedate => "#{eta}",
+							:assignee => { :name => "#{owner}" }, :reporter => { :name => "#{reporter}" }, :duedate => "#{eta}",
 							:priority => { :name => "Normal" }, :labels => [ "test_alb", "backlog_grooming" ], :environment => "Test", :description => "#{descr}" }
 				}
 			end
@@ -123,7 +123,7 @@ p descr_1stline
 
 	# Add the Jirakeys to twoDarray and move the issues to the EPIC (this is tested and works) https://docs.atlassian.com/jira-software/REST/cloud/#agile/1.0/epic-moveIssuesToEpic
     puts "\n### Moving the tickets to the epic.\n"
-	count = 1
+	count = start_in_row
 	jira_keys.each do |jiraid|
 		index = count.to_s + ".6"
 		puts index
@@ -223,6 +223,9 @@ def update_jiras_info(tDarray, dskarray, jirausr, jirapw)
 		if value == "Y"
 			mlst = index.to_i
 			owner = tDarray["#{mlst}.3"]
+			if owner == "unassigned" # https://confluence.atlassian.com/jirakb/how-to-set-assignee-to-unassigned-via-rest-api-in-jira-744721880.html
+				owner = "-1"
+			end
 			eta = tDarray["#{mlst}.4"]
 			transition_id = getTransitionID(tDarray["#{mlst}.5"])
 p tDarray["#{mlst}.5"]
@@ -302,7 +305,7 @@ def getTransitionID(status)
 end
 
 def split_tda(tDarray, num_rows, part)
-	# Splits twodarrays in two pieces.
+	# Splits twodarrays in two pieces, returns the part [part] back.
     puts "\n(Function split_tda)\n"
 
 	tDarray_part = Hash.new()

@@ -1,8 +1,11 @@
 # Example to start:
-# To test: curl -u $juser:$pass https://zendesk.atlassian.net/wiki/rest/api/content/161580589?expand=body.storage | python -mjson.tool
+# To test: 
+# export juser=
+# export jpass=
+# curl -u $juser:$jpass https://zendesk.atlassian.net/wiki/rest/api/content/161580589?expand=body.storage | python -mjson.tool
 # "PodZilla - After-Party" page ID: 161580589
 # EPIC = POD-681
-# Command: ruby Proj_mstones_update.rb 161580589 POD-681
+# Command: ruby Proj_mstones_update.rb 247857752 POD-681 aramos
 
 require 'rest-client'
 require 'json'
@@ -15,7 +18,7 @@ require_relative 'proj_mstones_lib'
 
 # ================================================================================== MAIN
 
-if ARGV.length != 2
+if ARGV.length != 3
   puts "Wrong num of args - try again."
   exit
 end
@@ -30,6 +33,7 @@ end
 
 confl_pag_ID = ARGV[0]
 epic = ARGV[1]
+reporter = ARGV[2]
 
 # confluence_url = "https://#{jirausr}:pwd@zendesk.atlassian.net/rest/api/2/issue/" + arg_jira_ticket + "/comment"
 confluence_url = "https://#{jirausr}:#{jirapwd}@zendesk.atlassian.net/wiki/rest/api/content/" + confl_pag_ID.to_s + "?expand=body.view"
@@ -66,6 +70,7 @@ compare_hashes = Array.new
 i = 0 # row
 j = 0 # column
 key = '0.0'
+increment = true
 
 # Process 3rd table of the confluence document & store in a hash
 doc.xpath("(//table[@class='wrapped confluenceTable'])[3]//tr").each do |row|
@@ -74,10 +79,10 @@ doc.xpath("(//table[@class='wrapped confluenceTable'])[3]//tr").each do |row|
 		celltoprint = Sanitize.clean(cell)
 		case j 
 		when 0 		# epic, milestone_num, descr
-			if celltoprint.match(/\^ .+/) 
+			if celltoprint.match(/\^ .+/)
 				puts "Skipping this Milestone row."
 				puts celltoprint
-				i -= 1
+				increment = false
 				break
 			else
            		key = i.to_s + "." + "0"
@@ -126,13 +131,23 @@ p tmp[1]
         puts "#{key} : " + twodarray[key]
 		j += 1
 	end
-	i += 1
+	if increment # flag not to count rows when skipping rows-milestones
+		i += 1
+		p i
+	end
+p i
+	increment = true
 	j = 0
 end
+
+unless i <= 1
+	i -= 1 # To remove the initial Milestone Header, not captured as it doesn't have a <td>
+end
+
 num_rows_html = i
 puts "\n\n### Num rows in the HTML table: " + num_rows_html.to_s
 
-last_key = nil
+top_key = 0 
 
 if File.file?(ymlfilename)     # If exists this confluence page has been processed before - milestone comparison required
 # Update Jiras:
@@ -141,16 +156,17 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 	mlst_tables_store.transaction(true) do  # begin read-only transaction, no changes allowed
   		mlst_tables_store.roots.each do |data_read|
     		diskarray[data_read] = mlst_tables_store[data_read]
-			last_key = data_read
+			r_key = data_read.match(/^\d+/)
+			root_key = r_key[0].to_i
+			if root_key > top_key.to_i
+				top_key = root_key
+				# puts "top_key: #{top_key}"
+			end
 		end
 	
   	end
 
-	# Test/show the read is correct:
-	puts "Last_key for data in disk: " + last_key
-
-	num_rows_d = last_key.match(/^\d+/)
-	num_rows_disk = num_rows_d[0].to_i + 1
+	num_rows_disk = top_key
 	puts "Num rows table in DISK: " + num_rows_disk.to_s
 
 	# Let's remove the JIRAs from the Hash so we can compare it later:
@@ -162,12 +178,6 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 		diskarray_nojiras.delete(key)
 		count += 1
 	end
-
-	# puts "\n\n\n"
-	# diskarray.each do |key, value|
-    #  	puts key + ' : ' + value.to_s
-	# end
-
 
 # Now let's compare hashes to take decisions: Create new Jira_mlstn? update Jira_mlstn? update Pstore in disk?
 # http://stackoverflow.com/questions/4928789/how-do-i-compare-two-hashes
@@ -198,9 +208,13 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 #	split twodarray
 		twodarray1 = split_tda(twodarray, num_rows_disk, 1) 
 		twodarray2 = split_tda(twodarray, num_rows_disk, 2)
-		update_jiras_info2(twodarray1, diskarray, jirausr, jirapwd)    #twodarray1 now has the jiras (after this call)
-		# Add new milestones and Jiras.
-		create_jiras2(twodarray2, jirausr, jirapwd, epic)   # twodarray2 now has the jiras (after this call)
+p num_rows_disk
+p twodarray1
+p twodarray2
+		# Step1: Edit milestones and jiras
+		update_jiras_info(twodarray1, diskarray, jirausr, jirapwd)    #twodarray1 now has the jiras (after this call)
+		# Step2: Add new milestones and Jiras.
+		create_jiras(twodarray2, jirausr, jirapwd, epic, num_rows_disk+1, reporter)   # twodarray2 now has the jiras (after this call)
 
 #	merge twodarray
 		twodarray = merge_tda(twodarray1,twodarray2)	
@@ -213,7 +227,7 @@ if File.file?(ymlfilename)     # If exists this confluence page has been process
 else 
 # Create Jiras and persist the data for the 1st time.
 	puts "\n\n### Creating Jiras for the 1st time.\n\n"
-	create_jiras(twodarray, jirausr, jirapwd, epic)   # In the OP project, next available Jira issue number, type milestone, and other parameters.
+	create_jiras(twodarray, jirausr, jirapwd, epic, 1, reporter)   # In the OP project, next available Jira issue number, type milestone, and other parameters.
 
 	persist_rows(twodarray, ymlfilename)
 end
